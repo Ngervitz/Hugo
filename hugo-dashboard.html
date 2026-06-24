@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hugo — Panel de Control</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --border: #222222;
+    --border-light: #2a2a2a;
+    --text: #e8e8e8;
+    --text-muted: #555;
+    --text-dim: #888;
+    --accent: #c8f542;
+    --accent-dim: rgba(200, 245, 66, 0.08);
+    --accent-border: rgba(200, 245, 66, 0.2);
+    --blue: #4fc3f7;
+    --blue-dim: rgba(79, 195, 247, 0.08);
+    --blue-border: rgba(79, 195, 247, 0.2);
+    --red: #ff5252;
+    --green: #69f0ae;
+    --yellow: #ffd740;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* Header */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+
+  .logo span {
+    color: var(--text-dim);
+    font-weight: 400;
+  }
+
+  .header-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    border: 1px solid var(--border-light);
+    padding: 3px 8px;
+    border-radius: 2px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+    animation: pulse 2s infinite;
+    margin-left: auto;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* Layout */
+  .main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    min-height: calc(100vh - 61px);
+  }
+
+  /* Panels */
+  .panel {
+    padding: 32px;
+    border-right: 1px solid var(--border);
+  }
+
+  .panel:last-child {
+    border-right: none;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .panel-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .panel-icon.sprint {
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    color: var(--accent);
+  }
+
+  .panel-icon.review {
+    background: var(--blue-dim);
+    border: 1px solid var(--blue-border);
+    color: var(--blue);
+  }
+
+  .panel-title {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .panel-title.sprint { color: var(--accent); }
+  .panel-title.review { color: var(--blue); }
+
+  .panel-desc {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* Form elements */
+  .field {
+    margin-bottom: 16px;
+  }
+
+  label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  textarea, input[type="text"] {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 12px;
+    border-radius: 4px;
+    resize: vertical;
+    line-height: 1.6;
+    transition: border-color 0.15s;
+    outline: none;
+  }
+
+  textarea:focus, input[type="text"]:focus {
+    border-color: var(--border-light);
+  }
+
+  .panel:first-child textarea:focus {
+    border-color: var(--accent-border);
+  }
+
+  .panel:last-child textarea:focus,
+  .panel:last-child input:focus {
+    border-color: var(--blue-border);
+  }
+
+  textarea::placeholder, input::placeholder {
+    color: var(--text-muted);
+  }
+
+  /* Buttons */
+  .btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .btn-sprint {
+    background: var(--accent);
+    color: #0a0a0a;
+  }
+
+  .btn-sprint:hover:not(:disabled) {
+    background: #d4ff4a;
+    transform: translateY(-1px);
+  }
+
+  .btn-review {
+    background: var(--blue);
+    color: #0a0a0a;
+  }
+
+  .btn-review:hover:not(:disabled) {
+    background: #81d4fa;
+    transform: translateY(-1px);
+  }
+
+  .spinner {
+    width: 10px;
+    height: 10px;
+    border: 2px solid rgba(0,0,0,0.3);
+    border-top-color: #000;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    display: none;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .loading .spinner { display: block; }
+
+  /* Output */
+  .output-area {
+    margin-top: 28px;
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.03), 0 4px 24px rgba(0,0,0,0.4);
+  }
+
+  .panel:first-child .output-area {
+    border-color: var(--accent-border);
+    box-shadow: 0 0 0 1px rgba(200,245,66,0.04), 0 4px 24px rgba(0,0,0,0.4), 0 0 32px rgba(200,245,66,0.04);
+  }
+
+  .panel:last-child .output-area {
+    border-color: var(--blue-border);
+    box-shadow: 0 0 0 1px rgba(79,195,247,0.04), 0 4px 24px rgba(0,0,0,0.4), 0 0 32px rgba(79,195,247,0.04);
+  }
+
+  .output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-light);
+    background: #0e0e0e;
+  }
+
+  .panel:first-child .output-header {
+    background: rgba(200,245,66,0.04);
+    border-bottom-color: var(--accent-border);
+  }
+
+  .panel:last-child .output-header {
+    background: rgba(79,195,247,0.04);
+    border-bottom-color: var(--blue-border);
+  }
+
+  .output-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .panel:first-child .output-label { color: rgba(200,245,66,0.6); }
+  .panel:last-child .output-label { color: rgba(79,195,247,0.6); }
+
+  .output-status {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 2px;
+    font-weight: 500;
+  }
+
+  .status-idle { color: var(--text-muted); }
+  .status-loading { color: var(--yellow); }
+  .status-ok { color: var(--green); background: rgba(105, 240, 174, 0.1); }
+  .status-error { color: var(--red); background: rgba(255, 82, 82, 0.1); }
+  .status-approved { color: var(--green); background: rgba(105, 240, 174, 0.1); }
+  .status-fix { color: var(--yellow); background: rgba(255, 215, 64, 0.1); }
+
+  .output-content {
+    padding: 20px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.8;
+    color: var(--text-muted);
+    min-height: 160px;
+    max-height: 480px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: #080808;
+  }
+
+  .panel:first-child .output-content { background: rgba(200,245,66,0.015); }
+  .panel:last-child .output-content { background: rgba(79,195,247,0.015); }
+
+  .output-content.has-content {
+    color: var(--text);
+  }
+
+  .output-content::-webkit-scrollbar {
+    width: 4px;
+  }
+  .output-content::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .output-content::-webkit-scrollbar-thumb {
+    background: var(--border-light);
+    border-radius: 2px;
+  }
+
+  /* Review verdict */
+  .verdict-block {
+    display: none;
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .verdict-block.approved {
+    background: rgba(105, 240, 174, 0.06);
+    border: 1px solid rgba(105, 240, 174, 0.2);
+    color: var(--green);
+  }
+
+  .verdict-block.needs-fix {
+    background: rgba(255, 215, 64, 0.06);
+    border: 1px solid rgba(255, 215, 64, 0.2);
+    color: var(--yellow);
+  }
+
+  .verdict-label {
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    opacity: 0.7;
+  }
+
+  /* Divider */
+  .field-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 20px 0;
+  }
+
+  /* Copy button */
+  .btn-copy {
+    background: none;
+    border: 1px solid var(--border-light);
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .btn-copy:hover {
+    color: var(--text);
+    border-color: var(--border-light);
+  }
+
+  @media (max-width: 900px) {
+    .main {
+      grid-template-columns: 1fr;
+    }
+    .panel {
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Hugo<span>/control</span></div>
+  <div class="header-badge">Copanel · Mi Plan</div>
+  <div class="status-dot" title="Sistema activo"></div>
+</header>
+
+<div class="main">
+
+  <!-- HUGO SPRINT -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-icon sprint">⚡</div>
+      <div>
+        <div class="panel-title sprint">Hugo Sprint</div>
+        <div class="panel-desc">Genera un prompt de implementación a partir de un problema. Flujo: Architect → Critic → Finalizer.</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Problema</label>
+      <textarea id="sprint-problema" rows="6" placeholder="Describí el problema o feature a implementar en Mi Plan..."></textarea>
+    </div>
+
+    <button class="btn btn-sprint" id="btn-sprint" onclick="runSprint()">
+      <span class="spinner" id="sprint-spinner"></span>
+      Generar Sprint
+    </button>
+
+    <div class="output-area" id="sprint-output-area" style="display:none">
+      <div class="output-header">
+        <span class="output-label">Output — Cursor Prompt</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="output-status status-idle" id="sprint-status">—</span>
+          <button class="btn-copy" onclick="copyOutput('sprint-output')">Copiar</button>
+        </div>
+      </div>
+      <div class="output-content" id="sprint-output">Esperando ejecución...</div>
+    </div>
+  </div>
+
+  <!-- HUGO REVIEW -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-icon review">🔍</div>
+      <div>
+        <div class="panel-title review">Hugo Review</div>
+        <div class="panel-desc">Audita un prompt y su respuesta de Cursor. Retorna APPROVED, NEEDS_FIX o BLOCKED.</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Prompt enviado a Cursor</label>
+      <textarea id="review-prompt" rows="3" placeholder="El prompt que usaste en Cursor..."></textarea>
+    </div>
+
+    <div class="field">
+      <label>Respuesta de Cursor</label>
+      <textarea id="review-respuesta" rows="4" placeholder="Lo que Cursor implementó o respondió..."></textarea>
+    </div>
+
+    <div class="field">
+      <label>Resultados QA <span style="color:var(--text-muted);font-size:10px;text-transform:none;letter-spacing:0">(opcional)</span></label>
+      <textarea id="review-qa" rows="2" placeholder="Tests pasados, errores encontrados, observaciones..."></textarea>
+    </div>
+
+    <button class="btn btn-review" id="btn-review" onclick="runReview()">
+      <span class="spinner" id="review-spinner"></span>
+      Auditar
+    </button>
+
+    <div class="output-area" id="review-output-area" style="display:none">
+      <div class="output-header">
+        <span class="output-label">Output — Veredicto</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="output-status status-idle" id="review-status">—</span>
+          <button class="btn-copy" onclick="copyOutput('review-output')">Copiar</button>
+        </div>
+      </div>
+      <div class="output-content" id="review-output">Esperando auditoría...</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const SPRINT_WEBHOOK = 'https://hook.eu1.make.com/ilg5aot8q592r2ka6cv3au2n6xi9gdyj';
+  const REVIEW_WEBHOOK = 'https://hook.eu1.make.com/krl2blhnvhaal6bbfqte2ogvxxoieony';
+
+  async function runSprint() {
+    const problema = document.getElementById('sprint-problema').value.trim();
+    if (!problema) { alert('Ingresá el problema antes de continuar.'); return; }
+
+    const btn = document.getElementById('btn-sprint');
+    const spinner = document.getElementById('sprint-spinner');
+    const statusEl = document.getElementById('sprint-status');
+    const outputEl = document.getElementById('sprint-output');
+    const areaEl = document.getElementById('sprint-output-area');
+
+    btn.disabled = true;
+    btn.classList.add('loading');
+    spinner.style.display = 'block';
+    areaEl.style.display = 'block';
+    statusEl.className = 'output-status status-loading';
+    statusEl.textContent = 'Procesando...';
+    outputEl.className = 'output-content';
+    outputEl.textContent = 'Ejecutando flujo: Architect → Critic → Finalizer...';
+
+    try {
+      const res = await fetch(SPRINT_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ problema })
+      });
+
+      const text = await res.text();
+
+      outputEl.className = 'output-content has-content';
+      outputEl.textContent = text;
+      statusEl.className = 'output-status status-ok';
+      statusEl.textContent = 'OK';
+
+    } catch (err) {
+      outputEl.className = 'output-content';
+      outputEl.textContent = 'Error: ' + err.message;
+      statusEl.className = 'output-status status-error';
+      statusEl.textContent = 'Error';
+    }
+
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    spinner.style.display = 'none';
+  }
+
+  async function runReview() {
+    const prompt_cursor = document.getElementById('review-prompt').value.trim();
+    const respuesta_cursor = document.getElementById('review-respuesta').value.trim();
+    const qa_results = document.getElementById('review-qa').value.trim();
+
+    if (!prompt_cursor || !respuesta_cursor) {
+      alert('El prompt y la respuesta de Cursor son obligatorios.');
+      return;
+    }
+
+    const btn = document.getElementById('btn-review');
+    const spinner = document.getElementById('review-spinner');
+    const statusEl = document.getElementById('review-status');
+    const outputEl = document.getElementById('review-output');
+    const areaEl = document.getElementById('review-output-area');
+
+    btn.disabled = true;
+    btn.classList.add('loading');
+    spinner.style.display = 'block';
+    areaEl.style.display = 'block';
+    statusEl.className = 'output-status status-loading';
+    statusEl.textContent = 'Auditando...';
+    outputEl.className = 'output-content';
+    outputEl.textContent = 'Ejecutando flujo: Auditor → Adjudicator → Router...';
+
+    try {
+      const res = await fetch(REVIEW_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          project: 'Mi Plan',
+          prompt_cursor,
+          respuesta_cursor,
+          qa_results
+        })
+      });
+
+      const text = await res.text();
+
+      outputEl.className = 'output-content has-content';
+      outputEl.textContent = text;
+
+      // Detectar veredicto para colorear el status
+      const upper = text.toUpperCase();
+      if (upper.includes('APPROVED')) {
+        statusEl.className = 'output-status status-approved';
+        statusEl.textContent = 'APPROVED';
+      } else if (upper.includes('BLOCKED')) {
+        statusEl.className = 'output-status status-error';
+        statusEl.textContent = 'BLOCKED';
+      } else if (upper.includes('NEEDS_FIX') || upper.includes('NEEDS FIX')) {
+        statusEl.className = 'output-status status-fix';
+        statusEl.textContent = 'NEEDS FIX';
+      } else {
+        statusEl.className = 'output-status status-ok';
+        statusEl.textContent = 'OK';
+      }
+
+    } catch (err) {
+      outputEl.className = 'output-content';
+      outputEl.textContent = 'Error: ' + err.message;
+      statusEl.className = 'output-status status-error';
+      statusEl.textContent = 'Error';
+    }
+
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    spinner.style.display = 'none';
+  }
+
+  function copyOutput(id) {
+    const el = document.getElementById(id);
+    if (!el.textContent || el.textContent === 'Esperando ejecución...' || el.textContent === 'Esperando auditoría...') return;
+    navigator.clipboard.writeText(el.textContent).then(() => {
+      const btn = el.closest('.output-area').querySelector('.btn-copy');
+      const original = btn.textContent;
+      btn.textContent = 'Copiado';
+      setTimeout(() => btn.textContent = original, 1500);
+    });
+  }
+</script>
+
+</body>
+</html>
